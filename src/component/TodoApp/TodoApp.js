@@ -1,11 +1,13 @@
 import React, { Component } from 'react'
 import "./TodoApp.css";
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default class TodoApp extends Component {
     state = {
         input: "",
         items: []
+
     };
 
     handleChange = event => {
@@ -17,27 +19,39 @@ export default class TodoApp extends Component {
     storeItems = event => {
         event.preventDefault();
         const { input } = this.state;
-        if(input === "")  return;
+        if(input.trim() === "")  {
+            this.notify("please enter task",'warning');
+            return
+        }
 
         this.setState({
             items:[...this.state.items,input],
             input: "",
             editingIndex: null,
-            editingInput: ""
+            editingInput: "",
+            deletingIndex:null,
 
         })
+        this.notify("task created",'success')
     };
 
     deleteItem = key => {
         this.setState({
             items: this.state.items.filter(( _,index) => key !==index)
         })
+        this.notify('removed task', 'error')
     };
 
     editItem = index => {
         this.setState({
             editingIndex: index,
             editingInput: this.state.items[index]
+        })
+    }
+
+    deleteItemtoggle = index => {
+        this.setState({
+            deletingIndex: index,
         })
     }
 
@@ -49,7 +63,10 @@ export default class TodoApp extends Component {
 
     saveEdit = index => {
         const { items, editingInput } = this.state
-        if(editingInput === "")  return;
+        if(editingInput.trim() === "")  {
+            this.notify("please enter task",'warning');
+            return;
+        };
         const allItems = [...items];
         allItems[index] = editingInput; 
         this.setState({
@@ -57,6 +74,8 @@ export default class TodoApp extends Component {
             editingIndex: null,
             editingInput: ""
         })
+        this.notify('task edited','success')
+        
     };
 
     cancelEdit = () => {
@@ -65,10 +84,28 @@ export default class TodoApp extends Component {
             editingInput: ""
         })
     };
+    canceldelete = () => {
+        this.setState({
+            deletingIndex: null,
+        })
+    };
+    
+    
+    notify = (text,type) => {toast[type](text, {
+        position: "bottom-center",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+    });}
+    
 
 
   render() {
-    const { input, items, editingIndex, editingInput } = this.state;
+    const { input, items, editingIndex, editingInput, deletingIndex } = this.state;
 
     return (
       <div className="todo-container">
@@ -95,6 +132,12 @@ export default class TodoApp extends Component {
                         <button onClick={() => this.saveEdit(index)}>Save</button>
                         <button onClick={this.cancelEdit}>Cancel</button>
                     </div>
+                ) : deletingIndex === index ?  (
+                    <div className='input-section'>
+                        <p>Are you sure?</p>
+                        <button onClick={() => this.deleteItem(index)}>Confirm</button>
+                        <button onClick={this.canceldelete}>Cancel</button>
+                    </div>
                 ) : (
                     <>
                         {data}
@@ -103,7 +146,7 @@ export default class TodoApp extends Component {
                             onClick={() => this.editItem(index)}
                             ></i>
                             <i className="fas fa-trash-alt"
-                            onClick={() => this.deleteItem(index)}
+                            onClick={() => this.deleteItemtoggle(index)}
                             ></i>
                         </div>
                     </>
@@ -111,6 +154,7 @@ export default class TodoApp extends Component {
             </li>
           ))}
         </ul>
+        <ToastContainer />
       </div>
     );
   }
